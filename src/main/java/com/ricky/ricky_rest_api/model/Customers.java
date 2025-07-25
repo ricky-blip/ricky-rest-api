@@ -21,7 +21,7 @@ public class Customers {
 
 	private String email;
 
-	private Boolean isActive = true;
+	private Boolean isactive;
 
 	private LocalDateTime createdAt = LocalDateTime.now();
 	private LocalDateTime updatedAt;
@@ -92,10 +92,10 @@ public class Customers {
 	}
 
 	public Boolean getActive() {
-		return isActive;
+		return isactive;
 	}
 
 	public void setActive(Boolean active) {
-		isActive = active;
+		isactive = active;
 	}
 }

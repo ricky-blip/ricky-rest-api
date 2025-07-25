@@ -11,6 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class CustomersService implements IService<ValCustomersDTO> {
 
@@ -53,9 +55,17 @@ public class CustomersService implements IService<ValCustomersDTO> {
 	}
 
 	@Override
-	public ResponseEntity<Object> findAll(Pageable pageable, HttpServletRequest request) {
-		return null;
+	public ResponseEntity<Object> findAll(HttpServletRequest request) {
+		List<Customers> activeCustomers = customersRepository.findByIsactiveTrue();
+		return ResponseEntity.ok(activeCustomers);
 	}
+
+
+	//pakai pagination
+//	Page<Customers> page = customersRepository.findAll(pageable);
+//return GlobalResponse.dataDitemukan(page, request);
+
+
 
 	@Override
 	public ResponseEntity<Object> findById(Long id, HttpServletRequest request) {
