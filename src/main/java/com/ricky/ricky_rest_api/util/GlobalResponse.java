@@ -4,7 +4,9 @@ import com.ricky.ricky_rest_api.handler.ResponseHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 public class GlobalResponse {
+
 	public static ResponseEntity<Object> dataBerhasilDisimpan(HttpServletRequest request){
 		return new ResponseHandler().handleResponse("DATA BERHASIL DISIMPAN", HttpStatus.CREATED,null,null,request);
 	}
@@ -42,4 +44,5 @@ public class GlobalResponse {
 	public static ResponseEntity<Object> objectNull(String errorCode, HttpServletRequest request){
 		return new ResponseHandler().handleResponse("DATA TIDAK VALID", HttpStatus.BAD_REQUEST,null,errorCode,request);
 	}
+
 }

@@ -204,17 +204,17 @@ INSERT INTO barang (kode_barang, nama_barang, satuan, harga, stok_qty, reserved_
 ('BRG100', 'Kertas HVS A4 70gsm 1/2 Rim', 'Pcs', 20000.00, 60, 0, 60, TRUE);
 --User
 -- Sales Manager
-INSERT INTO Users (username, password, full_name, role, is_active) VALUES
+INSERT INTO Users (username, password, full_name, role, isactive) VALUES
 ('manager_ricky', 'ricky123', 'Ricky Rinaldy', 'sales_manager', true);
 -- Sales 1
-INSERT INTO Users (username, password, full_name, role, is_active) VALUES
+INSERT INTO Users (username, password, full_name, role, isactive) VALUES
 ('sales_anna', 'anna123', 'Anna Smith', 'sales', true);
 -- Sales 2
-INSERT INTO Users (username, password, full_name, role, is_active) VALUES
-('sales_michael', 'michael', 'Michael Johnson', 'sales', true);
+INSERT INTO Users (username, password, full_name, role, isactive) VALUES
+('salesmichael', '$2a$11$qKE2SaOlPf4BSsNy37zfyOHfNiu03UpKsKihKhRW2WPk7nP.n0qWK', 'Michael Johnson', 'sales', true);
 -- Sales 3
-INSERT INTO Users (username, password, full_name, role, is_active) VALUES
+INSERT INTO Users (username, password, full_name, role, isactive) VALUES
 ('sales_emily', 'emily123', 'Emily Davis', 'sales', true);
 -- Sales 4
-INSERT INTO Users (username, password, full_name, role, is_active) VALUES
+INSERT INTO Users (username, password, full_name, role, isactive) VALUES
 ('sales_william', 'william', 'William Brown', 'sales', true);
