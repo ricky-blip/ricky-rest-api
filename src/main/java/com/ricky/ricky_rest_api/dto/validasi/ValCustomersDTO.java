@@ -18,6 +18,9 @@ public class ValCustomersDTO {
 	@Email(message = "Format email tidak valid")
 	private String email;
 
+	@NotNull(message = "Status active wajib diisi")
+	private Boolean isactive;
+
 	public String getKodeCustomer() {
 		return kodeCustomer;
 	}

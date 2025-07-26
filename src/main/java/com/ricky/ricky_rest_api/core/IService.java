@@ -1,5 +1,6 @@
 package com.ricky.ricky_rest_api.core;
 
+import com.ricky.ricky_rest_api.dto.validasi.ValCustomersDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +12,6 @@ public interface IService<F> {
 	public ResponseEntity<Object> delete(Long id, HttpServletRequest request);//021-030
 //	public ResponseEntity<Object> findAll(Pageable pageable,HttpServletRequest request);//031-040
 	public ResponseEntity<Object> findAll(HttpServletRequest request);//031-040
-
 	public ResponseEntity<Object> findById(Long id,HttpServletRequest request);//041-050
 	public ResponseEntity<Object> findByParam(Pageable pageable,String column, String value,HttpServletRequest request);//051-060
 }

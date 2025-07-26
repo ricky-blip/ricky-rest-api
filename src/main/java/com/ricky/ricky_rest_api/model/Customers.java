@@ -1,6 +1,8 @@
 package com.ricky.ricky_rest_api.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -9,39 +11,34 @@ import java.time.LocalDateTime;
 public class Customers {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id_customer")
 	private Integer idCustomer;
 
+	@Column(name = "kode_customer", length = 20, nullable = false, unique = true)
 	private String kodeCustomer;
 
+	@Column(name = "nama_customer", length = 100, nullable = false)
 	private String namaCustomer;
 
+	@Column(name = "address", length = 255, nullable = false)
 	private String address;
 
+	@Column(name = "phone", length = 20, nullable = false)
 	private String phone;
 
+	@Column(name = "email", length = 100, nullable = false)
 	private String email;
 
+	@Column(name = "isactive", nullable = false)
 	private Boolean isactive;
 
-	private LocalDateTime createdAt = LocalDateTime.now();
+	@Column(name = "created_at", updatable = false)
+	@CreationTimestamp
+	private LocalDateTime createdAt;
+
+	@Column(name = "updated_at", insertable = false)
+	@UpdateTimestamp
 	private LocalDateTime updatedAt;
-
-
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
-
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
-
-	public LocalDateTime getUpdatedAt() {
-		return updatedAt;
-	}
-
-	public void setUpdatedAt(LocalDateTime updatedAt) {
-		this.updatedAt = updatedAt;
-	}
 
 	public Integer getIdCustomer() {
 		return idCustomer;
@@ -91,11 +88,27 @@ public class Customers {
 		this.email = email;
 	}
 
-	public Boolean getActive() {
+	public Boolean getIsactive() {
 		return isactive;
 	}
 
-	public void setActive(Boolean active) {
-		isactive = active;
+	public void setIsactive(Boolean isactive) {
+		this.isactive = isactive;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void setUpdatedAt(LocalDateTime updatedAt) {
+		this.updatedAt = updatedAt;
 	}
 }

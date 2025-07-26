@@ -34,7 +34,7 @@ public class CustomersService implements IService<ValCustomersDTO> {
 			customer.setAddress(dto.getAddress());
 			customer.setPhone(dto.getPhone());
 			customer.setEmail(dto.getEmail());
-			customer.setActive(true);
+			customer.setIsactive(true);
 			customersRepository.save(customer);
 
 		} catch (Exception e) {
@@ -56,7 +56,7 @@ public class CustomersService implements IService<ValCustomersDTO> {
 
 	@Override
 	public ResponseEntity<Object> findAll(HttpServletRequest request) {
-		List<Customers> activeCustomers = customersRepository.findByIsactiveTrue();
+		List<Customers> activeCustomers = customersRepository.findCustomerByIsactiveTrue();
 		return ResponseEntity.ok(activeCustomers);
 	}
 
