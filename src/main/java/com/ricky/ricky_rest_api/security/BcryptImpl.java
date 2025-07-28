@@ -21,7 +21,7 @@ public class BcryptImpl {
 	}
 
 	public static void main(String[] args) {
-		String strUserName = "Michael123@";
+		String strUserName = "Ricky123@";
 		String hashKeDB = hash(strUserName);
 		System.out.println("Ini Hash Ke DB: " + hashKeDB);
 //        $2a$11$TdAcTD81TDQGSGfL4AzJu.QT5QYNfAZqr7r.vwSbTjBbrXyeUConS

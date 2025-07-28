@@ -205,7 +205,7 @@ INSERT INTO barang (kode_barang, nama_barang, satuan, harga, stok_qty, reserved_
 --User
 -- Sales Manager
 INSERT INTO Users (username, password, full_name, role, isactive) VALUES
-('manager_ricky', 'ricky123', 'Ricky Rinaldy', 'sales_manager', true);
+('managerricky', '$2a$11$2qs0MKBRk5FRmEubAYkbk.8VRwFBBuFW55KGm4KTMtArOz2W97Ca2', 'Ricky Rinaldy', 'sales_manager', true);
 -- Sales 1
 INSERT INTO Users (username, password, full_name, role, isactive) VALUES
 ('sales_anna', 'anna123', 'Anna Smith', 'sales', true);
