@@ -13,7 +13,7 @@ public class Barang {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id_barang")
-	private Integer idBarang;
+	private Long idBarang;
 
 	@Column(name = "kode_barang", length = 20, nullable = false, unique = true)
 	private String kodeBarang;
@@ -49,11 +49,11 @@ public class Barang {
 	@UpdateTimestamp
 	private LocalDateTime updatedAt;
 
-	public Integer getIdBarang() {
+	public Long getIdBarang() {
 		return idBarang;
 	}
 
-	public void setIdBarang(Integer idBarang) {
+	public void setIdBarang(Long idBarang) {
 		this.idBarang = idBarang;
 	}
 

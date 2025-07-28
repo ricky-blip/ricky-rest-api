@@ -2,6 +2,7 @@ package com.ricky.ricky_rest_api.service;
 
 import com.ricky.ricky_rest_api.core.IService;
 import com.ricky.ricky_rest_api.dto.validasi.ValBarangDTO;
+import com.ricky.ricky_rest_api.dto.validasi.ValCustomersDTO;
 import com.ricky.ricky_rest_api.model.Barang;
 import com.ricky.ricky_rest_api.repository.BarangRepository;
 import com.ricky.ricky_rest_api.util.GlobalResponse;
@@ -72,4 +73,6 @@ public class BarangService implements IService<ValBarangDTO> {
 	public ResponseEntity<Object> findByParam(Pageable pageable, String column, String value, HttpServletRequest request) {
 		return null;
 	}
+
+
 }
