@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CustomersRepository extends JpaRepository<Customers, Long> {
-//	Optional<Customers> findByKodeCustomer(String kodeCustomer);
-
 	List<Customers> findCustomerByIsactiveTrue();
+	Optional<Customers> findByKodeCustomer(String kodeCustomer);
+	List<Customers> findByKodeCustomerContainingIgnoreCase(String kode);
+	List<Customers> findByNamaCustomerContainingIgnoreCase(String nama);
 }

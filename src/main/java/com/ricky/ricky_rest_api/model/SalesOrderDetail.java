@@ -95,4 +95,5 @@ public class SalesOrderDetail {
 	public LocalDateTime getUpdatedAt() {
 		return updatedAt;
 	}
+
 }

@@ -1,11 +1,12 @@
 package com.ricky.ricky_rest_api.service;
 
 import com.ricky.ricky_rest_api.core.IService;
+import com.ricky.ricky_rest_api.dto.response.ResDraftSalesOrderDTO;
 import com.ricky.ricky_rest_api.dto.validasi.ValSalesOrderDTO;
 import com.ricky.ricky_rest_api.dto.validasi.ValSalesOrderDetailDTO;
 import com.ricky.ricky_rest_api.model.*;
 import com.ricky.ricky_rest_api.repository.*;
-import com.ricky.ricky_rest_api.util.GlobalResponse;
+import com.ricky.ricky_rest_api.util.ResponseUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class SalesOrderService implements IService<ValSalesOrderDTO> {
@@ -45,7 +48,7 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 			// 1. Ambil user dari JWT
 			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 			if (authentication == null || !authentication.isAuthenticated()) {
-				return GlobalResponse.dataTidakDitemukan("TRN02FV001", request);
+				return ResponseUtil.unauthorized("User tidak terautentikasi");
 			}
 			String username = authentication.getName();
 
@@ -99,37 +102,55 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 			// 6. Simpan
 			salesOrderRepository.save(salesOrder);
 
-			return GlobalResponse.dataBerhasilDisimpan(request);
+			return ResponseUtil.created("Data Sales Order berhasil disimpan", null);
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			return GlobalResponse.internalServerError("TRN02FE001", request);
+			return ResponseUtil.serverError("Gagal menyimpan Sales Order");
 		}
 	}
 
 	@Override
 	public ResponseEntity<Object> update(Long id, ValSalesOrderDTO dto, HttpServletRequest request) {
-		return GlobalResponse.dataTidakDitemukan("TRN02FE002", request);
+		return ResponseUtil.methodNotAllowed("Update belum didukung");
 	}
 
 	@Override
 	public ResponseEntity<Object> delete(Long id, HttpServletRequest request) {
-		return GlobalResponse.dataTidakDitemukan("TRN02FE003", request);
+		return ResponseUtil.methodNotAllowed("Delete belum didukung");
 	}
 
 	@Override
 	public ResponseEntity<Object> findAll(HttpServletRequest request) {
-		return GlobalResponse.dataTidakDitemukan("TRN02FE004", request);
+		try {
+			List<SalesOrder> drafts = salesOrderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.PENDING);
+
+			List<ResDraftSalesOrderDTO> draftDTOs = drafts.stream().map(draft -> {
+				return new ResDraftSalesOrderDTO(
+						draft.getIdSalesOrder(),
+						draft.getNoFaktur(),
+						draft.getCustomer().getNamaCustomer(),
+						draft.getTransactionType().name(),
+						draft.getTotalHarga()
+				);
+			}).collect(Collectors.toList());
+
+			return ResponseUtil.success("Data draft Sales Order ditemukan", draftDTOs);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.serverError("Gagal mengambil data draft");
+		}
 	}
 
 	@Override
 	public ResponseEntity<Object> findById(Long id, HttpServletRequest request) {
-		return GlobalResponse.dataTidakDitemukan("TRN02FE005", request);
+		return ResponseUtil.notFound("Fitur findById belum diimplementasikan");
 	}
 
 	@Override
 	public ResponseEntity<Object> findByParam(String column, String value, HttpServletRequest request) {
-		return GlobalResponse.dataTidakDitemukan("TRN02FE006", request);
+		return ResponseUtil.notFound("Fitur pencarian belum diimplementasikan");
 	}
 
 	private String generateFakturNumber() {

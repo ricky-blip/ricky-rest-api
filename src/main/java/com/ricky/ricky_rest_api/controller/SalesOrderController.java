@@ -22,4 +22,10 @@ public class SalesOrderController {
 			HttpServletRequest request) {
 		return salesOrderService.save(dto, request);
 	}
+
+	@GetMapping("/drafts")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> getDraftSalesOrders(HttpServletRequest request) {
+		return salesOrderService.findAll(request);
+	}
 }
