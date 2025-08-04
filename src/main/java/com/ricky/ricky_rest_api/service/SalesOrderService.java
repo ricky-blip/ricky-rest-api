@@ -72,7 +72,6 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 			BigDecimal subtotal = BigDecimal.ZERO;
 
 			for (ValSalesOrderDetailDTO detailDto : dto.getDetails()) {
-				// ✅ Fix: Gunakan Long, bukan Integer
 				Barang barang = barangRepository.findById(detailDto.getIdBarang())
 						.orElseThrow(() -> new RuntimeException("Barang tidak ditemukan"));
 
