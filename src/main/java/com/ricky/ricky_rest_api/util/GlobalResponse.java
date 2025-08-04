@@ -45,4 +45,11 @@ public class GlobalResponse {
 		return new ResponseHandler().handleResponse("DATA TIDAK VALID", HttpStatus.BAD_REQUEST,null,errorCode,request);
 	}
 
+//	public static ResponseEntity<Object> unauthorized(String errorCode, HttpServletRequest request) {
+//		return ResponseEntity.status(401).body(buildResponse(errorCode, "Unauthorized", request));
+//	}
+//
+//	public static ResponseEntity<Object> methodTidakDidukung(String errorCode, HttpServletRequest request) {
+//		return ResponseEntity.badRequest().body(buildResponse(errorCode, "Method tidak didukung", request));
+//	}
 }

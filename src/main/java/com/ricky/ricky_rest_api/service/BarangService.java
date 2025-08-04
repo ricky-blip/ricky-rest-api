@@ -70,9 +70,7 @@ public class BarangService implements IService<ValBarangDTO> {
 	}
 
 	@Override
-	public ResponseEntity<Object> findByParam(Pageable pageable, String column, String value, HttpServletRequest request) {
+	public ResponseEntity<Object> findByParam(String column, String value, HttpServletRequest request) {
 		return null;
 	}
-
-
 }

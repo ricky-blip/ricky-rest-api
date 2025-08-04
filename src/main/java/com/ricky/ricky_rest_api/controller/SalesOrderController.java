@@ -12,6 +12,14 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/sales-orders")
 public class SalesOrderController {
+	@Autowired
+	private SalesOrderService salesOrderService;
 
-
+	@PostMapping("/create")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> createSalesOrder(
+			@Valid @RequestBody ValSalesOrderDTO dto,
+			HttpServletRequest request) {
+		return salesOrderService.save(dto, request);
+	}
 }

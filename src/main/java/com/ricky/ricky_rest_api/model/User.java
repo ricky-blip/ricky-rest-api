@@ -32,7 +32,7 @@ public class User implements UserDetails {
 	private String fullName;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "role", nullable = false, columnDefinition = "ENUM('sales', 'sales_manager') DEFAULT 'sales'")
+	@Column(name = "role", nullable = false, columnDefinition = "ENUM('SALES', 'SALES_MANAGER') DEFAULT 'SALES'")
 	private Role role; // Enum Role
 
 	@Column(name = "created_at", updatable = false)

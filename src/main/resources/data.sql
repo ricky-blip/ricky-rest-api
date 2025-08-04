@@ -205,16 +205,16 @@ INSERT INTO barang (kode_barang, nama_barang, satuan, harga, stok_qty, reserved_
 --User
 -- Sales Manager
 INSERT INTO Users (username, password, full_name, role, isactive) VALUES
-('managerricky', '$2a$11$2qs0MKBRk5FRmEubAYkbk.8VRwFBBuFW55KGm4KTMtArOz2W97Ca2', 'Ricky Rinaldy', 'sales_manager', true);
+('managerricky', '$2a$11$2qs0MKBRk5FRmEubAYkbk.8VRwFBBuFW55KGm4KTMtArOz2W97Ca2', 'Ricky Rinaldy', 'SALES_MANAGER', true);
 -- Sales 1
 INSERT INTO Users (username, password, full_name, role, isactive) VALUES
-('sales_anna', 'anna123', 'Anna Smith', 'sales', true);
+('sales_anna', 'anna123', 'Anna Smith', 'SALES', true);
 -- Sales 2
 INSERT INTO Users (username, password, full_name, role, isactive) VALUES
-('salesmichael', '$2a$11$qKE2SaOlPf4BSsNy37zfyOHfNiu03UpKsKihKhRW2WPk7nP.n0qWK', 'Michael Johnson', 'sales', true);
+('salesmichael', '$2a$11$qKE2SaOlPf4BSsNy37zfyOHfNiu03UpKsKihKhRW2WPk7nP.n0qWK', 'Michael Johnson', 'SALES', true);
 -- Sales 3
 INSERT INTO Users (username, password, full_name, role, isactive) VALUES
-('sales_emily', 'emily123', 'Emily Davis', 'sales', true);
+('sales_emily', 'emily123', 'Emily Davis', 'SALES', true);
 -- Sales 4
 INSERT INTO Users (username, password, full_name, role, isactive) VALUES
-('sales_william', 'william', 'William Brown', 'sales', true);
+('sales_william', 'william', 'William Brown', 'SALES', true);

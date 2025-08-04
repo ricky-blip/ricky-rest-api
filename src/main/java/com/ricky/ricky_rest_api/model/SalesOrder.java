@@ -25,7 +25,7 @@ public class SalesOrder {
 	private Customers customer;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "id_user_sales_manager", nullable = false)
+	@JoinColumn(name = "id_user_sales_manager", nullable = true)
 	private User salesManager;
 
 	@ManyToOne(fetch = FetchType.LAZY)
