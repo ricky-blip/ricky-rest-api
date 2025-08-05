@@ -28,4 +28,10 @@ public class SalesOrderController {
 	public ResponseEntity<Object> getDraftSalesOrders(HttpServletRequest request) {
 		return salesOrderService.findAll(request);
 	}
+
+	@GetMapping("/drafts/{id}")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> getDraftDetail(@PathVariable Long id, HttpServletRequest request) {
+		return salesOrderService.findById(id, request);
+	}
 }

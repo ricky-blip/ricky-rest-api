@@ -1,7 +1,10 @@
 package com.ricky.ricky_rest_api.service;
 
 import com.ricky.ricky_rest_api.core.IService;
+import com.ricky.ricky_rest_api.dto.response.DetailBarangDTO;
+import com.ricky.ricky_rest_api.dto.response.ResDetailSalesOrderDTO;
 import com.ricky.ricky_rest_api.dto.response.ResDraftSalesOrderDTO;
+import com.ricky.ricky_rest_api.dto.response.UserDTO;
 import com.ricky.ricky_rest_api.dto.validasi.ValSalesOrderDTO;
 import com.ricky.ricky_rest_api.dto.validasi.ValSalesOrderDetailDTO;
 import com.ricky.ricky_rest_api.model.*;
@@ -145,7 +148,65 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 
 	@Override
 	public ResponseEntity<Object> findById(Long id, HttpServletRequest request) {
-		return ResponseUtil.notFound("Fitur findById belum diimplementasikan");
+		try {
+			SalesOrder salesOrder = salesOrderRepository.findById(id)
+					.orElseThrow(() -> new RuntimeException("Sales Order tidak ditemukan"));
+
+			if (salesOrder.getStatus() != OrderStatus.PENDING) {
+				return ResponseUtil.notFound("Hanya draft (status PENDING) yang bisa dilihat");
+			}
+
+			ResDetailSalesOrderDTO dto = new ResDetailSalesOrderDTO();
+			dto.setNoFaktur(salesOrder.getNoFaktur());
+			dto.setTanggalOrder(salesOrder.getTanggalOrder());
+			dto.setTransactionType(salesOrder.getTransactionType().name());
+			dto.setStatus(salesOrder.getStatus());
+
+			Customers customer = salesOrder.getCustomer();
+			dto.setNamaCustomer(customer.getNamaCustomer());
+			dto.setAlamatCustomer(customer.getAddress());
+			dto.setPhoneCustomer(customer.getPhone());
+			dto.setEmailCustomer(customer.getEmail());
+
+			dto.setSubtotal(salesOrder.getSubtotal());
+			dto.setPpn(salesOrder.getPpn());
+			dto.setJumlahPpn(salesOrder.getJumlahPpn());
+			dto.setTotalHarga(salesOrder.getTotalHarga());
+
+			dto.setSalesPerson(new UserDTO(
+					salesOrder.getSalesPerson().getFullName(),
+					salesOrder.getSalesPerson().getUsername(),
+					salesOrder.getSalesPerson().getRole().name()
+			));
+
+			if (salesOrder.getSalesManager() != null) {
+				dto.setSalesManager(new UserDTO(
+						salesOrder.getSalesManager().getFullName(),
+						salesOrder.getSalesManager().getUsername(),
+						salesOrder.getSalesManager().getRole().name()
+				));
+			}
+
+			List<DetailBarangDTO> detailDTOs = salesOrder.getDetails().stream().map(detail -> {
+				Barang barang = detail.getBarang();
+				return new DetailBarangDTO(
+						barang.getKodeBarang(),
+						barang.getNamaBarang(),
+						barang.getSatuan(),
+						detail.getQuantity(),
+						detail.getHargaJual(),
+						detail.getAddress()
+				);
+			}).collect(Collectors.toList());
+
+			dto.setDetails(detailDTOs);
+
+			return ResponseUtil.success("Data draft Sales Order ditemukan", dto);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.serverError("Gagal mengambil detail draft");
+		}
 	}
 
 	@Override
