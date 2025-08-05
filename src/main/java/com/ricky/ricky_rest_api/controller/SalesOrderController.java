@@ -1,6 +1,7 @@
 package com.ricky.ricky_rest_api.controller;
 
 import com.ricky.ricky_rest_api.dto.validasi.ValSalesOrderDTO;
+import com.ricky.ricky_rest_api.dto.validasi.ValSalesOrderEditDTO;
 import com.ricky.ricky_rest_api.service.SalesOrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -33,5 +34,17 @@ public class SalesOrderController {
 	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
 	public ResponseEntity<Object> getDraftDetail(@PathVariable Long id, HttpServletRequest request) {
 		return salesOrderService.findById(id, request);
+	}
+
+	@PutMapping("/{id}/edit")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> editSalesOrder(@PathVariable Long id, @Valid @RequestBody ValSalesOrderEditDTO dto, HttpServletRequest request) {
+		return salesOrderService.editSalesOrder(id, dto, request);
+	}
+
+	@DeleteMapping("/drafts/{id}")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> deleteDraft(@PathVariable Long id, HttpServletRequest request) {
+		return salesOrderService.delete(id, request);
 	}
 }
