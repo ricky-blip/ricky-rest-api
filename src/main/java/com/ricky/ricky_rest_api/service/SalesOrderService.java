@@ -1,10 +1,7 @@
 package com.ricky.ricky_rest_api.service;
 
 import com.ricky.ricky_rest_api.core.IService;
-import com.ricky.ricky_rest_api.dto.response.DetailBarangDTO;
-import com.ricky.ricky_rest_api.dto.response.ResDetailSalesOrderDTO;
-import com.ricky.ricky_rest_api.dto.response.ResDraftSalesOrderDTO;
-import com.ricky.ricky_rest_api.dto.response.UserDTO;
+import com.ricky.ricky_rest_api.dto.response.*;
 import com.ricky.ricky_rest_api.dto.validasi.ValSalesOrderDTO;
 import com.ricky.ricky_rest_api.dto.validasi.ValSalesOrderDetailDTO;
 import com.ricky.ricky_rest_api.dto.validasi.ValSalesOrderDetailEditDTO;
@@ -359,6 +356,30 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 	@Override
 	public ResponseEntity<Object> findByParam(String column, String value, HttpServletRequest request) {
 		return ResponseUtil.notFound("Fitur pencarian belum diimplementasikan");
+	}
+
+	// File: service/SalesOrderService.java
+
+	public ResponseEntity<Object> findAllUnvalidated(HttpServletRequest request) {
+		try {
+			List<SalesOrder> unvalidatedOrders = salesOrderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.UNVALIDATED);
+
+			List<ResUnvalidatedSalesOrderDTO> dtoList = unvalidatedOrders.stream().map(order -> {
+				return new ResUnvalidatedSalesOrderDTO(
+						order.getIdSalesOrder(),
+						order.getNoFaktur(),
+						order.getCustomer().getNamaCustomer(),
+						order.getTransactionType().name(),
+						order.getTotalHarga()
+				);
+			}).collect(Collectors.toList());
+
+			return ResponseUtil.success("Data Sales Order unvalidated ditemukan", dtoList);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.serverError("Gagal mengambil data unvalidated");
+		}
 	}
 
 	private String generateFakturNumber() {

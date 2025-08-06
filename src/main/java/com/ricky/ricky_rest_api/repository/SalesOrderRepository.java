@@ -10,5 +10,6 @@ import java.util.List;
 @Repository
 public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long> {
 	SalesOrder findByNoFaktur(String noFaktur);
+	// Ambil semua berdasarkan status
 	List<SalesOrder> findByStatusOrderByCreatedAtDesc(OrderStatus status);
 }

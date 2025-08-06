@@ -75,4 +75,13 @@ public class SalesOrderController {
 	public ResponseEntity<Object> submitToApproval(@PathVariable Long id, HttpServletRequest request) {
 		return salesOrderService.submitToApproval(id, request);
 	}
+
+	/**
+	 * Data UNVALIDATED
+	 */
+	@GetMapping("/unvalidated")
+	@PreAuthorize("hasRole('SALES_MANAGER')")
+	public ResponseEntity<Object> getUnvalidatedOrders(HttpServletRequest request) {
+		return salesOrderService.findAllUnvalidated(request);
+	}
 }
