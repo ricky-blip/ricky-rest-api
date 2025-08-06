@@ -1,6 +1,7 @@
 package com.ricky.ricky_rest_api.dto.validasi;
 
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -15,13 +16,38 @@ public class ValSalesOrderDetailEditDTO {
 	@NotNull(message = "Harga jual wajib diisi")
 	private BigDecimal hargaJual;
 
-	// Getter & Setter
-	public Long getIdBarang() { return idBarang; }
-	public void setIdBarang(Long idBarang) { this.idBarang = idBarang; }
+	@NotBlank(message = "Alamat tidak boleh kosong")
+	private String address;
 
-	public Integer getQuantity() { return quantity; }
-	public void setQuantity(Integer quantity) { this.quantity = quantity; }
+	public Long getIdBarang() {
+		return idBarang;
+	}
 
-	public BigDecimal getHargaJual() { return hargaJual; }
-	public void setHargaJual(BigDecimal hargaJual) { this.hargaJual = hargaJual; }
+	public void setIdBarang(Long idBarang) {
+		this.idBarang = idBarang;
+	}
+
+	public Integer getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(Integer quantity) {
+		this.quantity = quantity;
+	}
+
+	public BigDecimal getHargaJual() {
+		return hargaJual;
+	}
+
+	public void setHargaJual(BigDecimal hargaJual) {
+		this.hargaJual = hargaJual;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
 }

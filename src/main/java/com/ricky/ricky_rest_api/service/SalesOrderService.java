@@ -46,6 +46,7 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 
 	private final String className = "SalesOrderService";
 
+
 	@Override
 	@Transactional
 	public ResponseEntity<Object> save(ValSalesOrderDTO dto, HttpServletRequest request) {
@@ -111,6 +112,29 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseUtil.serverError("Gagal menyimpan Sales Order");
+		}
+	}
+
+	@Transactional
+	public ResponseEntity<Object> submitToApproval(Long id, HttpServletRequest request) {
+		try {
+			SalesOrder salesOrder = salesOrderRepository.findById(id)
+					.orElseThrow(() -> new RuntimeException("Sales Order tidak ditemukan"));
+
+			// Hanya draft (PENDING) yang bisa dikirim ke approval
+			if (salesOrder.getStatus() != OrderStatus.PENDING) {
+				return ResponseUtil.badRequest("Hanya Sales Order dengan status PENDING yang bisa dikirim ke approval");
+			}
+
+			// Ubah status ke UNVALIDATED
+			salesOrder.setStatus(OrderStatus.UNVALIDATED);
+			salesOrderRepository.save(salesOrder);
+
+			return ResponseUtil.success("Sales Order berhasil dikirim ke approval", null);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.serverError("Gagal mengirim ke approval");
 		}
 	}
 
