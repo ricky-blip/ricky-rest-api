@@ -72,18 +72,31 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
 			.csrf(AbstractHttpConfigurer::disable)
 
 			// 2. Konfigurasi otorisasi permintaan
+//			.authorizeHttpRequests(requests -> requests
+//					// Izinkan akses tanpa autentikasi ke endpoint berikut
+//					.requestMatchers(
+//							"/api/auth/**",      // Endpoint autentikasi (login, register jika ada)
+//							"/supplier/**",      // Izinkan sementara, sesuaikan dengan kebutuhan
+//							"/contoh/**",        // Izinkan sementara, sesuaikan dengan kebutuhan
+//							"/swagger-ui/**",    // Swagger UI
+//							"/v3/api-docs/**"    // OpenAPI docs
+//					).permitAll()
+//					// Semua request lainnya memerlukan autentikasi
+//					.anyRequest().authenticated()
+//			)
+
 			.authorizeHttpRequests(requests -> requests
-					// Izinkan akses tanpa autentikasi ke endpoint berikut
 					.requestMatchers(
-							"/api/auth/**",      // Endpoint autentikasi (login, register jika ada)
-							"/supplier/**",      // Izinkan sementara, sesuaikan dengan kebutuhan
-							"/contoh/**",        // Izinkan sementara, sesuaikan dengan kebutuhan
-							"/swagger-ui/**",    // Swagger UI
-							"/v3/api-docs/**"    // OpenAPI docs
+							"/api/auth/**",      // endpoint login
+							"/supplier/**",
+							"/contoh/**",
+							"/swagger-ui/**",    // folder swagger
+							"/swagger-ui.html",  // halaman utama swagger (penting!)
+							"/v3/api-docs/**"    // endpoint dokumentasi
 					).permitAll()
-					// Semua request lainnya memerlukan autentikasi
 					.anyRequest().authenticated()
 			)
+
 
 			// 3. Penanganan exception
 			// Karena kita menggunakan JWT Filter, penanganan 401 biasanya dilakukan

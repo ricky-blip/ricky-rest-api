@@ -3,6 +3,7 @@ package com.ricky.ricky_rest_api.dto.response;
 import java.math.BigDecimal;
 
 public class DetailBarangDTO {
+	private Long idBarang;
 	private String kodeBarang;
 	private String namaBarang;
 	private String satuan;
@@ -13,8 +14,8 @@ public class DetailBarangDTO {
 
 	public DetailBarangDTO() {}
 
-	// Constructor
-	public DetailBarangDTO(String kodeBarang, String namaBarang, String satuan, Integer quantity, BigDecimal hargaJual, String address) {
+	public DetailBarangDTO(Long idBarang, String kodeBarang, String namaBarang, String satuan, Integer quantity, BigDecimal hargaJual, String address) {
+		this.idBarang = idBarang;
 		this.kodeBarang = kodeBarang;
 		this.namaBarang = namaBarang;
 		this.satuan = satuan;
@@ -25,6 +26,9 @@ public class DetailBarangDTO {
 	}
 
 	// Getter & Setter
+	public Long getIdBarang() { return idBarang; }
+	public void setIdBarang(Long idBarang) { this.idBarang = idBarang; }
+
 	public String getKodeBarang() { return kodeBarang; }
 	public void setKodeBarang(String kodeBarang) { this.kodeBarang = kodeBarang; }
 

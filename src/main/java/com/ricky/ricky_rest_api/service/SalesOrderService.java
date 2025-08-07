@@ -43,7 +43,7 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 
 	private final String className = "SalesOrderService";
 
-
+  //Save Ke Draft
 	@Override
 	@Transactional
 	public ResponseEntity<Object> save(ValSalesOrderDTO dto, HttpServletRequest request) {
@@ -74,9 +74,27 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 			salesOrder.setStatus(OrderStatus.PENDING);
 			salesOrder.setTanggalOrder(LocalDateTime.now());
 
-			// 4. Proses Detail & Hitung Subtotal
-			BigDecimal subtotal = BigDecimal.ZERO;
+			// 4. Validasi: Semua barang harus punya satuan yang sama
+			String satuanPertama = null;
+			for (ValSalesOrderDetailDTO detailDto : dto.getDetails()) {
+				Barang barang = barangRepository.findById(detailDto.getIdBarang())
+						.orElseThrow(() -> new RuntimeException("Barang tidak ditemukan"));
 
+				if (satuanPertama == null) {
+					satuanPertama = barang.getSatuan();
+				} else if (!satuanPertama.equals(barang.getSatuan())) {
+					return ResponseUtil.badRequest("Tidak boleh input barang dengan satuan berbeda. Satuan harus: " + satuanPertama);
+				}
+
+				// Validasi stok: quantity tidak boleh melebihi available_qty
+				if (detailDto.getQuantity() > barang.getAvailableQty()) {
+					return ResponseUtil.badRequest("Stok tidak mencukupi untuk barang: " + barang.getNamaBarang() +
+							". Available: " + barang.getAvailableQty() + ", Diminta: " + detailDto.getQuantity());
+				}
+			}
+
+			// 5. Proses Detail & Hitung Subtotal
+			BigDecimal subtotal = BigDecimal.ZERO;
 			for (ValSalesOrderDetailDTO detailDto : dto.getDetails()) {
 				Barang barang = barangRepository.findById(detailDto.getIdBarang())
 						.orElseThrow(() -> new RuntimeException("Barang tidak ditemukan"));
@@ -86,13 +104,14 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 				detail.setAddress(detailDto.getAddress());
 				detail.setQuantity(detailDto.getQuantity());
 				detail.setHargaJual(detailDto.getHargaJual());
+				detail.setAddress(detailDto.getAddress());
 				detail.setSalesOrder(salesOrder);
 
 				subtotal = subtotal.add(detail.getHargaJual().multiply(BigDecimal.valueOf(detail.getQuantity())));
 				salesOrder.addDetail(detail);
 			}
 
-			// 5. Hitung PPN & Total
+			// 6. Hitung PPN & Total
 			BigDecimal ppnRate = new BigDecimal("10.00"); // 10%
 			BigDecimal jumlahPpn = subtotal.multiply(ppnRate.divide(new BigDecimal("100")));
 			BigDecimal totalHarga = subtotal.add(jumlahPpn);
@@ -102,8 +121,9 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 			salesOrder.setJumlahPpn(jumlahPpn);
 			salesOrder.setTotalHarga(totalHarga);
 
-			// 6. Simpan
+			// 7. Simpan
 			salesOrderRepository.save(salesOrder);
+
 			return ResponseUtil.created("Sales Order berhasil dibuat", null);
 
 		} catch (Exception e) {
@@ -216,6 +236,7 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 				detail.setBarang(barang);
 				detail.setQuantity(detailDto.getQuantity());
 				detail.setHargaJual(detailDto.getHargaJual());
+				detail.setAddress(detailDto.getAddress());
 				detail.setSalesOrder(salesOrder);
 
 				salesOrder.addDetail(detail);
@@ -334,6 +355,7 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 			List<DetailBarangDTO> detailDTOs = salesOrder.getDetails().stream().map(detail -> {
 				Barang barang = detail.getBarang();
 				return new DetailBarangDTO(
+						barang.getIdBarang(),
 						barang.getKodeBarang(),
 						barang.getNamaBarang(),
 						barang.getSatuan(),
@@ -379,6 +401,147 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseUtil.serverError("Gagal mengambil data unvalidated");
+		}
+	}
+
+	@Transactional
+	public ResponseEntity<Object> reject(Long id, HttpServletRequest request) {
+		try {
+			SalesOrder salesOrder = salesOrderRepository.findById(id)
+					.orElseThrow(() -> new RuntimeException("Sales Order tidak ditemukan"));
+
+			// Hanya bisa reject jika status UNVALIDATED
+			if (salesOrder.getStatus() != OrderStatus.UNVALIDATED) {
+				return ResponseUtil.badRequest("Hanya Sales Order dengan status UNVALIDATED yang bisa direject");
+			}
+
+			// Ubah status jadi REJECTED
+			salesOrder.setStatus(OrderStatus.REJECTED);
+			salesOrderRepository.save(salesOrder);
+
+			return ResponseUtil.success("Sales Order berhasil ditolak", null);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.serverError("Gagal menolak Sales Order");
+		}
+	}
+
+	// File: service/SalesOrderService.java
+
+	@Transactional
+	public ResponseEntity<Object> approve(Long id, HttpServletRequest request) {
+		try {
+			SalesOrder salesOrder = salesOrderRepository.findById(id)
+					.orElseThrow(() -> new RuntimeException("Sales Order tidak ditemukan"));
+
+			// Hanya bisa approve jika status UNVALIDATED
+			if (salesOrder.getStatus() != OrderStatus.UNVALIDATED) {
+				return ResponseUtil.badRequest("Hanya Sales Order dengan status UNVALIDATED yang bisa di-approve");
+			}
+
+			// Simpan referensi user yang approve
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			User approvingUser = userRepository.findByUsername(authentication.getName())
+					.orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+
+			// Cek dan update stok untuk setiap barang
+			for (SalesOrderDetail detail : salesOrder.getDetails()) {
+				Barang barang = detail.getBarang();
+
+				// Cek ketersediaan stok
+				if (barang.getAvailableQty() < detail.getQuantity()) {
+					return ResponseUtil.badRequest("Stok tidak cukup untuk barang: " + barang.getNamaBarang());
+				}
+
+				// Update stok
+				barang.setReservedQty(barang.getReservedQty() + detail.getQuantity());
+				barang.setAvailableQty(barang.getAvailableQty() - detail.getQuantity());
+
+				barangRepository.save(barang);
+			}
+
+			// Ubah status jadi VALIDATED
+			salesOrder.setStatus(OrderStatus.VALIDATED);
+			salesOrder.setSalesManager(approvingUser); // Siapa yang approve
+			salesOrder.setTanggalValidasi(LocalDateTime.now());
+			salesOrderRepository.save(salesOrder);
+
+			return ResponseUtil.success("Sales Order berhasil disetujui", null);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.serverError("Gagal menyetujui Sales Order");
+		}
+	}
+
+	public ResponseEntity<Object> findAllValidated(HttpServletRequest request) {
+		try {
+			List<SalesOrder> validatedOrders = salesOrderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.VALIDATED);
+
+			List<ResDraftSalesOrderDTO> dtoList = validatedOrders.stream().map(order -> {
+				return new ResDraftSalesOrderDTO(
+						order.getIdSalesOrder(),
+						order.getNoFaktur(),
+						order.getCustomer().getNamaCustomer(),
+						order.getTransactionType().name(),
+						order.getTotalHarga()
+				);
+			}).collect(Collectors.toList());
+
+			return ResponseUtil.success("Data Sales Order yang sudah divalidasi ditemukan", dtoList);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.serverError("Gagal mengambil data yang sudah divalidasi");
+		}
+	}
+
+	public ResponseEntity<Object> findAllRejected(HttpServletRequest request) {
+		try {
+			List<SalesOrder> rejectedOrders = salesOrderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.REJECTED);
+
+			List<ResDraftSalesOrderDTO> dtoList = rejectedOrders.stream().map(order -> {
+				return new ResDraftSalesOrderDTO(
+						order.getIdSalesOrder(),
+						order.getNoFaktur(),
+						order.getCustomer().getNamaCustomer(),
+						order.getTransactionType().name(),
+						order.getTotalHarga()
+				);
+			}).collect(Collectors.toList());
+
+			return ResponseUtil.success("Data Sales Order yang ditolak ditemukan", dtoList);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.serverError("Gagal mengambil data yang ditolak");
+		}
+	}
+
+	public ResponseEntity<Object> getSummary(HttpServletRequest request) {
+		try {
+			ResSalesOrderSummaryDTO summary = new ResSalesOrderSummaryDTO();
+
+			// Hitung per status
+			summary.setPending(
+					salesOrderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.PENDING).size()
+			);
+			summary.setUnvalidated(
+					salesOrderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.UNVALIDATED).size()
+			);
+			summary.setValidated(
+					salesOrderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.VALIDATED).size()
+			);
+			summary.setRejected(
+					salesOrderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.REJECTED).size()
+			);
+
+			return ResponseUtil.success("Ringkasan Sales Order berhasil didapatkan", summary);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.serverError("Gagal mengambil ringkasan Sales Order");
 		}
 	}
 

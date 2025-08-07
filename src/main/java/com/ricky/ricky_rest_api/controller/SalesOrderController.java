@@ -77,11 +77,63 @@ public class SalesOrderController {
 	}
 
 	/**
-	 * Data UNVALIDATED
+	 * GET Data UNVALIDATED
 	 */
 	@GetMapping("/unvalidated")
-	@PreAuthorize("hasRole('SALES_MANAGER')")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
 	public ResponseEntity<Object> getUnvalidatedOrders(HttpServletRequest request) {
 		return salesOrderService.findAllUnvalidated(request);
+	}
+
+	/**
+	 * BUTTON REJECTED
+	 */
+	@PutMapping("/{id}/reject")
+	@PreAuthorize("hasRole('SALES_MANAGER')")
+	public ResponseEntity<Object> rejectSalesOrder(@PathVariable Long id, HttpServletRequest request) {
+		return salesOrderService.reject(id, request);
+	}
+
+	/**
+	 * BUTTON APPROVE
+	 */
+	@PutMapping("/{id}/approve")
+	@PreAuthorize("hasRole('SALES_MANAGER')")
+	public ResponseEntity<Object> approveSalesOrder(@PathVariable Long id, HttpServletRequest request) {
+		return salesOrderService.approve(id, request);
+	}
+
+	/**
+	 * GET Data VALIDATED
+	 */
+	@GetMapping("/validated")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> getValidatedOrders(HttpServletRequest request) {
+		return salesOrderService.findAllValidated(request);
+	}
+
+	/**
+	 * GET Data REJECTED
+	 */
+	@GetMapping("/rejected")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> getRejectedOrders(HttpServletRequest request) {
+		return salesOrderService.findAllRejected(request);
+	}
+
+	/**
+	 * GET Data REJECTED
+	 * data nya seperti ini
+	 * "data": {
+	 *     "pending": 2,
+	 *     "unvalidated": 1,
+	 *     "validated": 3,
+	 *     "rejected": 0
+	 *   }
+	 */
+	@GetMapping("/summary")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> getSummary(HttpServletRequest request) {
+		return salesOrderService.getSummary(request);
 	}
 }
