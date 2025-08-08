@@ -1,19 +1,20 @@
 package com.ricky.ricky_rest_api.dto.validasi;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.*;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class ValLoginUserDTO {
-	@NotNull(message = "Username Tidak Boleh Kosong")
-	@Pattern(regexp = "^[a-z0-9\\.]{8,16}$", message = "Format Username Tidak Valid. Username harus 8-16 karakter, terdiri dari huruf kecil, angka, dan titik.")
+	@NotBlank(message = "Username tidak boleh kosong")
+	@Size(min = 8, max = 16, message = "Username harus berisi 8-16 karakter")
+	@Pattern(regexp = "^[a-z0-9\\.]{8,16}$", message = "Format Username Tidak Valid. Username harus terdiri dari huruf kecil, angka, dan titik.")
 	private String username;
 
-	@NotNull(message = "Password Tidak Boleh Kosong")
+	@NotBlank(message = "Password tidak boleh kosong")
+	@Size(min = 8, max = 15, message = "Password harus berisi 8-15 karakter")
 	@Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[@_#\\-$])[\\w@_#\\-$]{8,15}$",
-			message = "Format Password Tidak Valid. Password harus 8-15 karakter, mengandung huruf besar, huruf kecil, angka, dan salah satu dari [@_#\\-$]")
+			message = "Format Password Tidak Valid. Password harus mengandung huruf besar, huruf kecil, angka, dan simbol.")
 	private String password;
 
+	// Getter & Setter
 	public String getUsername() {
 		return username;
 	}

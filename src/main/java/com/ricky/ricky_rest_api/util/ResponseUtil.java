@@ -3,6 +3,11 @@ package com.ricky.ricky_rest_api.util;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ResponseUtil {
 
@@ -41,9 +46,20 @@ public class ResponseUtil {
 		return ResponseEntity.status(500).body(body);
 	}
 
-	// ✅ Tambahkan ini
 	public static <T> ResponseEntity<Object> methodNotAllowed(String message) {
 		ApiResponse<T> body = new ApiResponse<>(405, "error", message, null);
 		return ResponseEntity.status(405).body(body);
+	}
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ApiResponse<Object>> handleValidation(MethodArgumentNotValidException ex) {
+		List<String> errors = ex.getBindingResult()
+				.getFieldErrors()
+				.stream()
+				.map(x -> x.getDefaultMessage())
+				.collect(Collectors.toList());
+
+		ApiResponse<Object> body = new ApiResponse<>(400, "error", "Validasi input gagal", errors);
+		return ResponseEntity.status(400).body(body);
 	}
 }

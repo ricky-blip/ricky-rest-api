@@ -214,7 +214,7 @@ INSERT INTO Users (username, password, full_name, role, isactive) VALUES
 ('salesmichael', '$2a$11$qKE2SaOlPf4BSsNy37zfyOHfNiu03UpKsKihKhRW2WPk7nP.n0qWK', 'Michael Johnson', 'SALES', true);
 -- Sales 3
 INSERT INTO Users (username, password, full_name, role, isactive) VALUES
-('sales_emily', 'emily123', 'Emily Davis', 'SALES', true);
+('sales.emily', '$2a$11$a6wRjZk8Cp0oTVhxJYPu3.JoZ4.oujYlmggobJ972iLVy2Tp8NEjW', 'Emily Davis', 'SALES', true);
 -- Sales 4
 INSERT INTO Users (username, password, full_name, role, isactive) VALUES
 ('sales_william', 'william', 'William Brown', 'SALES', true);

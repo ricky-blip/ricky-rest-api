@@ -1,6 +1,6 @@
-// File: AuthService.java (diperbaiki)
 package com.ricky.ricky_rest_api.service;
 
+import com.ricky.ricky_rest_api.dto.validasi.ChangePasswordDTO;
 import com.ricky.ricky_rest_api.dto.validasi.ValLoginUserDTO;
 import com.ricky.ricky_rest_api.model.User;
 import com.ricky.ricky_rest_api.repository.UserRepository;
@@ -10,10 +10,13 @@ import com.ricky.ricky_rest_api.util.ResponseUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,39 +39,34 @@ public class AuthService {
 
 	public ResponseEntity<Object> login(ValLoginUserDTO loginDto, HttpServletRequest request) {
 		Map<String, Object> responseData = new HashMap<>();
-		User userFromDb = null;
 
 		try {
-			String inputUsername = loginDto.getUsername();
-			String inputPassword = loginDto.getPassword();
-
-			if (inputUsername == null || inputUsername.isEmpty() || inputPassword == null || inputPassword.isEmpty()) {
-				return ResponseUtil.badRequest("Username dan password wajib diisi");
-			}
-
-			Optional<User> optionalUser = userRepository.findByUsernameAndIsActive(inputUsername, true);
+			Optional<User> optionalUser = userRepository.findByUsernameAndIsActive(loginDto.getUsername(), true);
 			if (optionalUser.isEmpty()) {
-				return ResponseUtil.notFound("User tidak ditemukan");
+				// Jangan kasih tahu apakah user ada
+				return ResponseUtil.unauthorized("Username atau password salah");
 			}
 
-			userFromDb = optionalUser.get();
+			User user = optionalUser.get();
 
-			if (!passwordEncoder.matches(inputPassword, userFromDb.getPassword())) {
-				return ResponseUtil.badRequest("Password salah");
+			if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
+				// Jangan kasih tahu hanya password salah
+				return ResponseUtil.unauthorized("Username atau password salah");
 			}
 
+			// Generate token
 			Map<String, Object> jwtClaims = new HashMap<>();
-			jwtClaims.put("id", userFromDb.getIdUser());
-			jwtClaims.put("naleng", userFromDb.getFullName());
-			jwtClaims.put("role", userFromDb.getRole().name());
+			jwtClaims.put("id", user.getIdUser());
+			jwtClaims.put("naleng", user.getFullName());
+			jwtClaims.put("role", user.getRole().name());
 
-			String token = jwtUtility.doGenerateToken(jwtClaims, userFromDb.getUsername());
+			String token = jwtUtility.doGenerateToken(jwtClaims, user.getUsername());
 
 			Map<String, Object> userData = new HashMap<>();
-			userData.put("idUser", userFromDb.getIdUser());
-			userData.put("username", userFromDb.getUsername());
-			userData.put("fullName", userFromDb.getFullName());
-			userData.put("role", userFromDb.getRole().name());
+			userData.put("idUser", user.getIdUser());
+			userData.put("username", user.getUsername());
+			userData.put("fullName", user.getFullName());
+			userData.put("role", user.getRole().name());
 
 			responseData.put("token", token);
 			responseData.put("user", userData);
@@ -76,7 +74,7 @@ public class AuthService {
 			return ResponseUtil.success("Login berhasil", responseData);
 
 		} catch (Exception e) {
-			LoggingFile.logException("AuthService", "login(...) Input: " + (loginDto != null ? loginDto.getUsername() : "null"), e);
+			LoggingFile.logException("AuthService", "login(...) Input: " + loginDto.getUsername(), e);
 			return ResponseUtil.serverError("Terjadi kesalahan internal");
 		}
 	}
@@ -92,6 +90,41 @@ public class AuthService {
 			}
 		} else {
 			throw new UsernameNotFoundException("User not found: " + username);
+		}
+	}
+
+	@Transactional
+	public ResponseEntity<Object> changePassword(ChangePasswordDTO dto, HttpServletRequest request) {
+		try {
+			// 1. Ambil user dari JWT
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			User user = userRepository.findByUsername(authentication.getName())
+					.orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+
+			// 2. Cek password lama
+			if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
+				return ResponseUtil.badRequest("Password lama salah");
+			}
+
+			// 3. Cek apakah password baru sama dengan password lama
+			if (passwordEncoder.matches(dto.getNewPassword(), user.getPassword())) {
+				return ResponseUtil.badRequest("Password baru tidak boleh sama dengan password lama");
+			}
+
+			// 4. Cek konfirmasi password
+			if (!dto.getNewPassword().equals(dto.getConfirmNewPassword())) {
+				return ResponseUtil.badRequest("Konfirmasi password baru tidak cocok");
+			}
+
+			// 5. Update password baru
+			user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+			userRepository.save(user);
+
+			return ResponseUtil.success("Password berhasil diubah", null);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.serverError("Gagal mengubah password");
 		}
 	}
 }
