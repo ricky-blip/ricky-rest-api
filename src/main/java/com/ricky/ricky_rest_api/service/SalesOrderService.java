@@ -74,7 +74,7 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 		  salesOrder.setStatus(OrderStatus.PENDING);
 		  salesOrder.setTanggalOrder(LocalDateTime.now());
 
-		  // 4. ✅ VALIDASI: Cek stok tersedia & satuan sama
+		  // 4. VALIDASI: Cek stok tersedia & satuan sama
 		  String satuanPertama = null;
 		  BigDecimal subtotal = BigDecimal.ZERO;
 
@@ -237,7 +237,7 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 				return ResponseUtil.badRequest("Hanya Sales Order dengan status PENDING yang bisa diedit");
 			}
 
-			// ✅ 1. VALIDASI STOK DULU (sebelum clear)
+			// 1. VALIDASI STOK DULU (sebelum clear)
 			for (ValSalesOrderDetailEditDTO detailDto : dto.getDetails()) {
 				Barang barang = barangRepository.findById(detailDto.getIdBarang())
 						.orElseThrow(() -> new RuntimeException("Barang tidak ditemukan"));
@@ -250,10 +250,10 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 				}
 			}
 
-			// ✅ 2. Baru clear setelah validasi berhasil
+			// 2. Baru clear setelah validasi berhasil
 			salesOrder.getDetails().clear();
 
-			// ✅ 3. Proses input baru
+			// 3. Proses input baru
 			for (ValSalesOrderDetailEditDTO detailDto : dto.getDetails()) {
 				Barang barang = barangRepository.findById(detailDto.getIdBarang())
 						.orElseThrow(() -> new RuntimeException("Barang tidak ditemukan"));
@@ -268,10 +268,10 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 				salesOrder.addDetail(detail);
 			}
 
-			// ✅ 4. Hitung ulang
+			// 4. Hitung ulang
 			hitungUlangTotal(salesOrder);
 
-			// ✅ 5. Simpan
+			// 5. Simpan
 			salesOrderRepository.save(salesOrder);
 
 			return ResponseUtil.success("Sales Order berhasil diperbarui", null);
