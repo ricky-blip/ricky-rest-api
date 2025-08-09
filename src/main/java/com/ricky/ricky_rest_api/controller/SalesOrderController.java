@@ -47,6 +47,15 @@ public class SalesOrderController {
 	}
 
 	/**
+	 * Get detail untuk SEMUA status (PENDING, UNVALIDATED, VALIDATED, REJECTED)
+	 */
+	@GetMapping("/{id}")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> getDetail(@PathVariable Long id, HttpServletRequest request) {
+		return salesOrderService.findById(id, request);
+	}
+
+	/**
 	 * Edit draft (status PENDING)
 	 */
 	@PutMapping("/{id}/edit")

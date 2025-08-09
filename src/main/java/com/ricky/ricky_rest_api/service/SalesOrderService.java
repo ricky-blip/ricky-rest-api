@@ -132,13 +132,32 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 	@Override
 	public ResponseEntity<Object> findAll(HttpServletRequest request) {
 		try {
-			List<SalesOrder> drafts = salesOrderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.PENDING);
+			// 1. Ambil user dari JWT
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			if (authentication == null || !authentication.isAuthenticated()) {
+				return ResponseUtil.unauthorized("User tidak terautentikasi");
+			}
+			String username = authentication.getName();
 
-			// Cek apakah list kosong
+			User currentUser = userRepository.findByUsername(username)
+					.orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+
+			List<SalesOrder> drafts;
+
+			// 2. Filter: Sales hanya lihat milik sendiri, Sales Manager lihat semua
+			if (currentUser.getRole().equals(Role.SALES_MANAGER)) {
+				drafts = salesOrderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.PENDING);
+			} else {
+				drafts = salesOrderRepository.findByStatusAndSalesPersonOrderByCreatedAtDesc(
+						OrderStatus.PENDING, currentUser);
+			}
+
+			// 3. Cek apakah kosong
 			if (drafts.isEmpty()) {
 				return ResponseUtil.notFound("Data draft Sales Order tidak ditemukan");
 			}
 
+			// 4. Mapping ke DTO
 			List<ResDraftSalesOrderDTO> draftDTOs = drafts.stream().map(draft -> {
 				return new ResDraftSalesOrderDTO(
 						draft.getIdSalesOrder(),
@@ -157,15 +176,21 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 		}
 	}
 
-	//GET Detail SO, Detail Draft
+	//GET Detail
 	@Override
 	public ResponseEntity<Object> findById(Long id, HttpServletRequest request) {
 		try {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			User currentUser = userRepository.findByUsername(authentication.getName())
+					.orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+
 			SalesOrder salesOrder = salesOrderRepository.findById(id)
 					.orElseThrow(() -> new RuntimeException("Sales Order tidak ditemukan"));
 
-			if (salesOrder.getStatus() != OrderStatus.PENDING) {
-				return ResponseUtil.notFound("Hanya draft (status PENDING) yang bisa dilihat");
+			// Cek otorisasi: pemilik atau Sales Manager
+			if (!salesOrder.getSalesPerson().getIdUser().equals(currentUser.getIdUser())
+					&& !currentUser.getRole().equals(Role.SALES_MANAGER)) {
+				return ResponseUtil.forbidden("Anda tidak memiliki izin untuk mengakses data ini");
 			}
 
 			ResDetailSalesOrderDTO dto = new ResDetailSalesOrderDTO();
@@ -214,11 +239,11 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 
 			dto.setDetails(detailDTOs);
 
-			return ResponseUtil.success("Data draft Sales Order ditemukan", dto);
+			return ResponseUtil.success("Data Sales Order ditemukan", dto);
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			return ResponseUtil.serverError("Gagal mengambil detail draft");
+			return ResponseUtil.serverError("Gagal mengambil detail Sales Order");
 		}
 	}
 
@@ -226,12 +251,17 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 	@Transactional
 	public ResponseEntity<Object> editSalesOrder(Long id, ValSalesOrderEditDTO dto, HttpServletRequest request) {
 		try {
-			if (dto == null || dto.getDetails() == null || dto.getDetails().isEmpty()) {
-				return ResponseUtil.badRequest("Data edit Sales Order tidak valid");
-			}
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			User currentUser = userRepository.findByUsername(authentication.getName())
+					.orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
 
 			SalesOrder salesOrder = salesOrderRepository.findById(id)
 					.orElseThrow(() -> new RuntimeException("Sales Order tidak ditemukan"));
+
+			// Cek pemilik
+			if (!isOwner(id, currentUser) && !currentUser.getRole().equals(Role.SALES_MANAGER)) {
+				return ResponseUtil.forbidden("Anda tidak memiliki izin untuk mengedit draft ini");
+			}
 
 			if (!salesOrder.getStatus().equals(OrderStatus.PENDING)) {
 				return ResponseUtil.badRequest("Hanya Sales Order dengan status PENDING yang bisa diedit");
@@ -302,8 +332,17 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 	@Transactional
 	public ResponseEntity<Object> delete(Long id, HttpServletRequest request) {
 		try {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			User currentUser = userRepository.findByUsername(authentication.getName())
+					.orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+
 			SalesOrder salesOrder = salesOrderRepository.findById(id)
 					.orElseThrow(() -> new RuntimeException("Sales Order tidak ditemukan"));
+
+			// Cek pemilik
+			if (!isOwner(id, currentUser)) {
+				return ResponseUtil.forbidden("Anda hanya bisa menghapus draft milik sendiri");
+			}
 
 			if (salesOrder.getStatus() != OrderStatus.PENDING) {
 				return ResponseUtil.badRequest("Hanya Sales Order dengan status PENDING yang bisa dihapus");
@@ -370,10 +409,22 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 	//Get Data Unvalidated
 	public ResponseEntity<Object> findAllUnvalidated(HttpServletRequest request) {
 		try {
-			List<SalesOrder> unvalidatedOrders = salesOrderRepository
-					.findByStatusOrderByCreatedAtDesc(OrderStatus.UNVALIDATED);
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			User currentUser = userRepository.findByUsername(authentication.getName())
+					.orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
 
-			// Cek apakah data kosong
+			List<SalesOrder> unvalidatedOrders;
+
+			if (currentUser.getRole().equals(Role.SALES_MANAGER)) {
+				// Sales Manager: lihat semua
+				unvalidatedOrders = salesOrderRepository
+						.findByStatusOrderByCreatedAtDesc(OrderStatus.UNVALIDATED);
+			} else {
+				// Sales: hanya lihat milik sendiri
+				unvalidatedOrders = salesOrderRepository
+						.findByStatusAndSalesPersonOrderByCreatedAtDesc(OrderStatus.UNVALIDATED, currentUser);
+			}
+
 			if (unvalidatedOrders.isEmpty()) {
 				return ResponseUtil.notFound("Data Sales Order unvalidated tidak ditemukan");
 			}
@@ -466,10 +517,20 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 	//Get Data Validated
 	public ResponseEntity<Object> findAllValidated(HttpServletRequest request) {
 		try {
-			List<SalesOrder> validatedOrders = salesOrderRepository
-					.findByStatusOrderByCreatedAtDesc(OrderStatus.VALIDATED);
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			User currentUser = userRepository.findByUsername(authentication.getName())
+					.orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
 
-			// Cek jika data kosong
+			List<SalesOrder> validatedOrders;
+
+			if (currentUser.getRole().equals(Role.SALES_MANAGER)) {
+				validatedOrders = salesOrderRepository
+						.findByStatusOrderByCreatedAtDesc(OrderStatus.VALIDATED);
+			} else {
+				validatedOrders = salesOrderRepository
+						.findByStatusAndSalesPersonOrderByCreatedAtDesc(OrderStatus.VALIDATED, currentUser);
+			}
+
 			if (validatedOrders.isEmpty()) {
 				return ResponseUtil.notFound("Data Sales Order yang sudah divalidasi tidak ditemukan");
 			}
@@ -495,10 +556,20 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 	//Get Data Rejected
 	public ResponseEntity<Object> findAllRejected(HttpServletRequest request) {
 		try {
-			List<SalesOrder> rejectedOrders = salesOrderRepository
-					.findByStatusOrderByCreatedAtDesc(OrderStatus.REJECTED);
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			User currentUser = userRepository.findByUsername(authentication.getName())
+					.orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
 
-			// Cek jika data kosong
+			List<SalesOrder> rejectedOrders;
+
+			if (currentUser.getRole().equals(Role.SALES_MANAGER)) {
+				rejectedOrders = salesOrderRepository
+						.findByStatusOrderByCreatedAtDesc(OrderStatus.REJECTED);
+			} else {
+				rejectedOrders = salesOrderRepository
+						.findByStatusAndSalesPersonOrderByCreatedAtDesc(OrderStatus.REJECTED, currentUser);
+			}
+
 			if (rejectedOrders.isEmpty()) {
 				return ResponseUtil.notFound("Data Sales Order yang ditolak tidak ditemukan");
 			}
@@ -548,6 +619,13 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 			e.printStackTrace();
 			return ResponseUtil.serverError("Gagal mengambil ringkasan Sales Order");
 		}
+	}
+
+	//cek pemilik data (sales)
+	private boolean isOwner(Long salesOrderId, User currentUser) {
+		return salesOrderRepository.findById(salesOrderId)
+				.map(so -> so.getSalesPerson().getIdUser().equals(currentUser.getIdUser()))
+				.orElse(false);
 	}
 
 	private String generateFakturNumber() {

@@ -21,6 +21,14 @@ public class ValCustomersDTO {
 	@NotNull(message = "Status active wajib diisi")
 	private Boolean isactive;
 
+	public Boolean getIsactive() {
+		return isactive;
+	}
+
+	public void setIsactive(Boolean isactive) {
+		this.isactive = isactive;
+	}
+
 	public String getKodeCustomer() {
 		return kodeCustomer;
 	}

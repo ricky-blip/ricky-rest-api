@@ -2,6 +2,7 @@ package com.ricky.ricky_rest_api.repository;
 
 import com.ricky.ricky_rest_api.model.OrderStatus;
 import com.ricky.ricky_rest_api.model.SalesOrder;
+import com.ricky.ricky_rest_api.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.QueryHints;
@@ -21,8 +22,11 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long> {
 	// Ambil semua berdasarkan status
 	List<SalesOrder> findByStatusOrderByCreatedAtDesc(OrderStatus status);
 
+	// Filter by status AND salesPerson
+	List<SalesOrder> findByStatusAndSalesPersonOrderByCreatedAtDesc(OrderStatus status, User salesPerson);
+
 	/**
-	 * SalesOrder dengan lock write (untuk mencegah race condition saat approve)
+	 * Temukan SalesOrder dengan lock write (untuk mencegah race condition saat approve)
 	 */
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@QueryHints({
