@@ -1,33 +1,144 @@
-HELP.md
+# =========================
+# === GENERAL IGNORES ===
+# =========================
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+*~
+*.swp
+*.swo
+
+# Logs
+logs
+*.log
+*.log.*
+log/
+
+# Runtime data
+pids
+*.pid
+*.pid.lock
+*.seed
+
+# Temporary files
+*.tmp
+temp*
+
+# =============================
+# === SPRING BOOT / JAVA ====
+# =============================
+
+# Compiled class file
+*.class
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
 target/
+!target/README.md
 .mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+!.mvn/wrapper/maven-wrapper.jar
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# Gradle
+.gradle/
+build/
+!build/
 
-### IntelliJ IDEA ###
-.idea
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
+/out/
+/production/
+/caches/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+# Eclipse
+.settings/
+.project
+.classpath
+.metadata
+bin/
+tmp/
 
-### VS Code ###
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# VS Code
 .vscode/
+*.vscode/*
+
+# =============================
+# === SECRETS & SENSITIVE FILES ===
+# =============================
+
+# Firebase / Google Cloud
+**/service-account-key.json
+**/google-services.json
+**/firebase-config.json
+
+# Database & API Keys
+**/application-secret.properties
+**/db-passwords.txt
+**/api-keys.json
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+
+# =============================
+# === EDITOR & IDE ===
+# =============================
+
+# Vim
+*.swp
+*.swo
+*.un~
+Session.vim
+.netrwhist
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# =============================
+# === MISCELLANEOUS ===
+# =============================
+
+# Archive
+*.7z
+*.dmg
+*.gz
+*.iso
+*.tar
+*.zip
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local development files
+local.properties
