@@ -141,4 +141,4 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # Local development files
-local.properties
+local.propertiessrc/main/resources/service-account-key.json
