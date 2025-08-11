@@ -41,6 +41,9 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Autowired
+	private FcmService fcmService;
+
 	private final String className = "SalesOrderService";
 
   //Save Ke Draft
@@ -385,6 +388,20 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 			// Ubah status ke UNVALIDATED
 			salesOrder.setStatus(OrderStatus.UNVALIDATED);
 			salesOrderRepository.save(salesOrder);
+
+			// Kirim notifikasi ke Sales Manager
+			List<User> salesManagers = userRepository.findByRole(Role.SALES_MANAGER);
+			for (User manager : salesManagers) {
+				if (manager.getFcmToken() != null) {
+					fcmService.sendNotification(
+							manager.getFcmToken(),
+							"Draft Baru Menunggu Approval",
+							"Sales " + salesOrder.getSalesPerson().getFullName() +
+									" telah mengirim draft " + salesOrder.getNoFaktur() +
+									" untuk approval."
+					);
+				}
+			}
 
 			return ResponseUtil.success("Sales Order berhasil dikirim ke approval", null);
 

@@ -51,6 +51,25 @@ public class User implements UserDetails {
 	@Column(name = "isactive", nullable = false) // Nama kolom di DB
 	private Boolean isActive; // Nama field Java
 
+	@Column(name = "fcm_token")
+	private String fcmToken;
+
+	public Boolean getActive() {
+		return isActive;
+	}
+
+	public void setActive(Boolean active) {
+		isActive = active;
+	}
+
+	public String getFcmToken() {
+		return fcmToken;
+	}
+
+	public void setFcmToken(String fcmToken) {
+		this.fcmToken = fcmToken;
+	}
+
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		// Misalnya, role disimpan sebagai enum 'sales' atau 'sales_manager'

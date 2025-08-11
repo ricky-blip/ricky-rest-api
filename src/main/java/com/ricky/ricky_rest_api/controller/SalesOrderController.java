@@ -59,7 +59,8 @@ public class SalesOrderController {
 	 * Edit draft (status PENDING)
 	 */
 	@PutMapping("/{id}/edit")
-	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+//	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	@PreAuthorize("hasRole('SALES')")
 	public ResponseEntity<Object> editSalesOrder(
 			@PathVariable Long id,
 			@Valid @RequestBody ValSalesOrderEditDTO dto,
@@ -71,7 +72,8 @@ public class SalesOrderController {
 	 * Hapus draft (status PENDING)
 	 */
 	@DeleteMapping("/drafts/{id}")
-	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+//	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	@PreAuthorize("hasRole('SALES')")
 	public ResponseEntity<Object> deleteDraft(@PathVariable Long id, HttpServletRequest request) {
 		return salesOrderService.delete(id, request);
 	}
