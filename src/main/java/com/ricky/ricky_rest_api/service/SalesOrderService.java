@@ -640,6 +640,47 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 	}
 
 	//SECTION : Search Data
+	public ResponseEntity<Object> searchDrafts(String query, HttpServletRequest request) {
+		try {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			User currentUser = userRepository.findByUsername(authentication.getName())
+					.orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+
+			if (query == null || query.trim().isEmpty()) {
+				return ResponseUtil.badRequest("Query pencarian tidak boleh kosong");
+			}
+
+			List<SalesOrder> results = salesOrderRepository.searchByStatusAndQuery(OrderStatus.PENDING, query.trim());
+
+			// Filter: Sales hanya lihat milik sendiri
+			if (!currentUser.getRole().equals(Role.SALES_MANAGER)) {
+				results = results.stream()
+						.filter(so -> so.getSalesPerson().getIdUser().equals(currentUser.getIdUser()))
+						.collect(Collectors.toList());
+			}
+
+			if (results.isEmpty()) {
+				return ResponseUtil.notFound("Tidak ada draft yang cocok");
+			}
+
+			List<ResDraftSalesOrderDTO> dtos = results.stream().map(order -> {
+				return new ResDraftSalesOrderDTO(
+						order.getIdSalesOrder(),
+						order.getNoFaktur(),
+						order.getCustomer().getNamaCustomer(),
+						order.getTransactionType().name(),
+						order.getTotalHarga()
+				);
+			}).collect(Collectors.toList());
+
+			return ResponseUtil.success("Draft ditemukan", dtos);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.serverError("Gagal mencari draft");
+		}
+	}
+
 	public ResponseEntity<Object> searchUnvalidated(String query, HttpServletRequest request) {
 		return searchByStatus(OrderStatus.UNVALIDATED, query, request);
 	}

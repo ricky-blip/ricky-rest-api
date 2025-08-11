@@ -156,7 +156,14 @@ public class SalesOrderController {
 	/**
 	 * Search Data
 	 */
-	// controller/SalesOrderController.java
+	@GetMapping("/drafts/search")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> searchDrafts(
+			@RequestParam String q,
+			HttpServletRequest request) {
+		return salesOrderService.searchDrafts(q, request);
+	}
+
 	@GetMapping("/unvalidated/search")
 	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
 	public ResponseEntity<Object> searchUnvalidated(
