@@ -2,6 +2,8 @@
 package com.ricky.ricky_rest_api.util;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -61,5 +63,16 @@ public class ResponseUtil {
 
 		ApiResponse<Object> body = new ApiResponse<>(400, "error", "Validasi input gagal", errors);
 		return ResponseEntity.status(400).body(body);
+	}
+
+	/**
+	 * Khusus untuk download file (PDF)
+	 * Mengembalikan byte[] tanpa wrapper ApiResponse
+	 */
+	public static ResponseEntity<byte[]> file(byte[] content, String filename) {
+		return ResponseEntity.ok()
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+				.contentType(MediaType.APPLICATION_PDF)
+				.body(content);
 	}
 }

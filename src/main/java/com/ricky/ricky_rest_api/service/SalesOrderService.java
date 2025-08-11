@@ -190,6 +190,7 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 			SalesOrder salesOrder = salesOrderRepository.findById(id)
 					.orElseThrow(() -> new RuntimeException("Sales Order tidak ditemukan"));
 
+
 			// Cek otorisasi: pemilik atau Sales Manager
 			if (!salesOrder.getSalesPerson().getIdUser().equals(currentUser.getIdUser())
 					&& !currentUser.getRole().equals(Role.SALES_MANAGER)) {
@@ -635,6 +636,60 @@ public class SalesOrderService implements IService<ValSalesOrderDTO> {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseUtil.serverError("Gagal mengambil ringkasan Sales Order");
+		}
+	}
+
+	//SECTION : Search Data
+	public ResponseEntity<Object> searchUnvalidated(String query, HttpServletRequest request) {
+		return searchByStatus(OrderStatus.UNVALIDATED, query, request);
+	}
+
+	public ResponseEntity<Object> searchRejected(String query, HttpServletRequest request) {
+		return searchByStatus(OrderStatus.REJECTED, query, request);
+	}
+
+	public ResponseEntity<Object> searchValidated(String query, HttpServletRequest request) {
+		return searchByStatus(OrderStatus.VALIDATED, query, request);
+	}
+
+	private ResponseEntity<Object> searchByStatus(OrderStatus status, String query, HttpServletRequest request) {
+		try {
+			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			User currentUser = userRepository.findByUsername(authentication.getName())
+					.orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+
+			if (query == null || query.trim().isEmpty()) {
+				return ResponseUtil.badRequest("Query pencarian tidak boleh kosong");
+			}
+
+			List<SalesOrder> results = salesOrderRepository.searchByStatusAndQuery(status, query.trim());
+
+			// Filter: Sales hanya lihat milik sendiri
+			if (!currentUser.getRole().equals(Role.SALES_MANAGER)) {
+				results = results.stream()
+						.filter(so -> so.getSalesPerson().getIdUser().equals(currentUser.getIdUser()))
+						.collect(Collectors.toList());
+			}
+
+			if (results.isEmpty()) {
+				return ResponseUtil.notFound("Tidak ada data yang cocok");
+			}
+
+			List<ResUnvalidatedSalesOrderDTO> dtos = results.stream().map(order -> {
+				return new ResUnvalidatedSalesOrderDTO(
+						order.getIdSalesOrder(),
+						order.getNoFaktur(),
+						order.getCustomer().getNamaCustomer(),
+						order.getTransactionType().name(),
+						order.getTotalHarga()
+				);
+			}).collect(Collectors.toList());
+
+			return ResponseUtil.success("Data ditemukan", dtos);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseUtil.serverError("Gagal mencari data");
 		}
 	}
 

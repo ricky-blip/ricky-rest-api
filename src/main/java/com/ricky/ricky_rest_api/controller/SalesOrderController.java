@@ -1,14 +1,25 @@
 package com.ricky.ricky_rest_api.controller;
 
+import com.ricky.ricky_rest_api.dto.response.ResDetailSalesOrderDTO;
+import com.ricky.ricky_rest_api.service.PdfService;
+import com.ricky.ricky_rest_api.service.SalesOrderService;
 import com.ricky.ricky_rest_api.dto.validasi.ValSalesOrderDTO;
 import com.ricky.ricky_rest_api.dto.validasi.ValSalesOrderEditDTO;
-import com.ricky.ricky_rest_api.service.SalesOrderService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
+import com.ricky.ricky_rest_api.util.ApiResponse;
+import com.ricky.ricky_rest_api.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import java.io.ByteArrayInputStream;
 
 @RestController
 @RequestMapping("/api/sales-orders")
@@ -16,6 +27,9 @@ public class SalesOrderController {
 
 	@Autowired
 	private SalesOrderService salesOrderService;
+
+	@Autowired
+	private PdfService pdfService;
 
 	/**
 	 * Simpan Input -> Draft (status PENDING)
@@ -59,7 +73,6 @@ public class SalesOrderController {
 	 * Edit draft (status PENDING)
 	 */
 	@PutMapping("/{id}/edit")
-//	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
 	@PreAuthorize("hasRole('SALES')")
 	public ResponseEntity<Object> editSalesOrder(
 			@PathVariable Long id,
@@ -72,7 +85,6 @@ public class SalesOrderController {
 	 * Hapus draft (status PENDING)
 	 */
 	@DeleteMapping("/drafts/{id}")
-//	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
 	@PreAuthorize("hasRole('SALES')")
 	public ResponseEntity<Object> deleteDraft(@PathVariable Long id, HttpServletRequest request) {
 		return salesOrderService.delete(id, request);
@@ -134,17 +146,75 @@ public class SalesOrderController {
 
 	/**
 	 * GET Data REJECTED
-	 * data nya seperti ini
-	 * "data": {
-	 *     "pending": 2,
-	 *     "unvalidated": 1,
-	 *     "validated": 3,
-	 *     "rejected": 0
-	 *   }
 	 */
 	@GetMapping("/summary")
 	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
 	public ResponseEntity<Object> getSummary(HttpServletRequest request) {
 		return salesOrderService.getSummary(request);
+	}
+
+	/**
+	 * Search Data
+	 */
+	// controller/SalesOrderController.java
+	@GetMapping("/unvalidated/search")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> searchUnvalidated(
+			@RequestParam String q,
+			HttpServletRequest request) {
+		return salesOrderService.searchUnvalidated(q, request);
+	}
+
+	@GetMapping("/rejected/search")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> searchRejected(
+			@RequestParam String q,
+			HttpServletRequest request) {
+		return salesOrderService.searchRejected(q, request);
+	}
+
+	@GetMapping("/validated/search")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<Object> searchValidated(
+			@RequestParam String q,
+			HttpServletRequest request) {
+		return salesOrderService.searchValidated(q, request);
+	}
+
+	/**
+	 * Generate PDF dari Sales Order
+	 */
+	@GetMapping("/{id}/pdf")
+	@PreAuthorize("hasAnyRole('SALES', 'SALES_MANAGER')")
+	public ResponseEntity<byte[]> getPdf(@PathVariable Long id, HttpServletRequest request) {
+		try {
+			ResponseEntity<Object> response = salesOrderService.findById(id, request);
+			if (response.getStatusCode() != HttpStatus.OK) {
+				return ResponseEntity.notFound().build();
+			}
+
+			// 1. Ekstrak dari ApiResponse
+			ApiResponse apiResponse = (ApiResponse) response.getBody();
+			if (apiResponse == null || apiResponse.getData() == null) {
+				return ResponseEntity.notFound().build();
+			}
+
+			// 2. Ambil data dan casting ke DTO
+			Object data = apiResponse.getData();
+			if (!(data instanceof ResDetailSalesOrderDTO)) {
+				return ResponseEntity.status(500).build();
+			}
+
+			ResDetailSalesOrderDTO dto = (ResDetailSalesOrderDTO) data;
+
+			// 3. Generate PDF
+			byte[] pdfBytes = pdfService.generateSalesOrderPdf(dto);
+
+			return ResponseUtil.file(pdfBytes, "sales-order-" + dto.getNoFaktur() + ".pdf");
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).build();
+		}
 	}
 }
