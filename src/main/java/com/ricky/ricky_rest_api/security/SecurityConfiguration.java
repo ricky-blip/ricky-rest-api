@@ -87,11 +87,12 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
 
 			.authorizeHttpRequests(requests -> requests
 					.requestMatchers(
+							"/",
 							"/api/auth/**",      // endpoint login
 							"/supplier/**",
 							"/contoh/**",
 							"/swagger-ui/**",    // folder swagger
-							"/swagger-ui.html",  // halaman utama swagger (penting!)
+							"/swagger-ui.html",  // halaman utama swagger
 							"/v3/api-docs/**"    // endpoint dokumentasi
 					).permitAll()
 					.anyRequest().authenticated()

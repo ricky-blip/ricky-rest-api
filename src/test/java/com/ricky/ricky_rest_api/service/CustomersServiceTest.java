@@ -20,6 +20,7 @@ class CustomersServiceTest {
 	private CustomersService customersService;
 	private HttpServletRequest request;
 
+
 	@BeforeEach
 	void setUp() throws Exception {
 		customersRepository = mock(CustomersRepository.class);
@@ -33,10 +34,11 @@ class CustomersServiceTest {
 		request = mock(HttpServletRequest.class);
 	}
 
+	//Unit Test Buat Customer Baru
 	@Test
 	void testCreateCustomer_Berhasil() {
 		ValCustomersDTO dto = new ValCustomersDTO();
-		dto.setKodeCustomer("C001");
+		dto.setKodeCustomer("CUST900");
 		dto.setNamaCustomer("Ricky");
 		dto.setAddress("Jl. Contoh");
 		dto.setPhone("08123456789");
@@ -51,15 +53,16 @@ class CustomersServiceTest {
 		verify(customersRepository, times(1)).save(any(Customers.class));
 	}
 
+	//Unit Test Buat Cek Kode Customer yang sudah ada
 	@Test
 	void testCreateCustomer_KodeSudahAda() {
 		ValCustomersDTO dto = new ValCustomersDTO();
-		dto.setKodeCustomer("C001");
+		dto.setKodeCustomer("CUST900");
 
 		Customers existing = new Customers();
-		existing.setKodeCustomer("C001");
+		existing.setKodeCustomer("CUST900");
 
-		when(customersRepository.findByKodeCustomer("C001"))
+		when(customersRepository.findByKodeCustomer("CUST900"))
 				.thenReturn(Optional.of(existing));
 
 		ResponseEntity<Object> response = customersService.save(dto, request);
@@ -68,12 +71,14 @@ class CustomersServiceTest {
 		verify(customersRepository, never()).save(any());
 	}
 
+	//Unit Test Buat inputan yang null atau kosong
 	@Test
 	void testCreateCustomer_DTONull() {
 		ResponseEntity<Object> response = customersService.save(null, request);
 		assertEquals(400, response.getStatusCodeValue());
 	}
 
+	//Unit Test Buat Ambil Semua data Customers
 	@Test
 	void testFindAllCustomer_Berhasil() {
 		Customers c1 = new Customers();
