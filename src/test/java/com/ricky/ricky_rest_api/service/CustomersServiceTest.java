@@ -5,13 +5,14 @@ import com.ricky.ricky_rest_api.model.Customers;
 import com.ricky.ricky_rest_api.repository.CustomersRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 class CustomersServiceTest {
@@ -20,22 +21,24 @@ class CustomersServiceTest {
 	private CustomersService customersService;
 	private HttpServletRequest request;
 
-
+	//pakai mock ini utk supaya tidak benar-benar akses database langsung
 	@BeforeEach
 	void setUp() throws Exception {
-		customersRepository = mock(CustomersRepository.class);
-		customersService = new CustomersService();
+		customersRepository = mock(CustomersRepository.class); // bikin object palsu (mock) untuk repository
+		customersService = new CustomersService(); // bikin instance service asli (tapi repositorinya palsu)
 
 		// Inject mock repository ke service
 		var field = CustomersService.class.getDeclaredField("customersRepository");
-		field.setAccessible(true);
+		field.setAccessible(true); // supaya bisa akses private field
 		field.set(customersService, customersRepository);
 
-		request = mock(HttpServletRequest.class);
+		request = mock(HttpServletRequest.class); // mock request
 	}
 
-	//Unit Test Buat Customer Baru
+	// ==================== CREATE ====================
+
 	@Test
+	@DisplayName("Create Customer - Berhasil Menyimpan Data Baru")
 	void testCreateCustomer_Berhasil() {
 		ValCustomersDTO dto = new ValCustomersDTO();
 		dto.setKodeCustomer("CUST900");
@@ -44,7 +47,7 @@ class CustomersServiceTest {
 		dto.setPhone("08123456789");
 		dto.setEmail("ricky@example.com");
 
-		when(customersRepository.findByKodeCustomer("C001"))
+		when(customersRepository.findByKodeCustomer("CUST900"))
 				.thenReturn(Optional.empty());
 
 		ResponseEntity<Object> response = customersService.save(dto, request);
@@ -53,8 +56,9 @@ class CustomersServiceTest {
 		verify(customersRepository, times(1)).save(any(Customers.class));
 	}
 
-	//Unit Test Buat Cek Kode Customer yang sudah ada
+	//ini ketika kode customer sudah ada
 	@Test
+	@DisplayName("Create Customer - Gagal Karena Kode Sudah Ada")
 	void testCreateCustomer_KodeSudahAda() {
 		ValCustomersDTO dto = new ValCustomersDTO();
 		dto.setKodeCustomer("CUST900");
@@ -71,15 +75,32 @@ class CustomersServiceTest {
 		verify(customersRepository, never()).save(any());
 	}
 
-	//Unit Test Buat inputan yang null atau kosong
+	//kalau data inputan null atau kosong
 	@Test
+	@DisplayName("Create Customer - Gagal Karena DTO Null")
 	void testCreateCustomer_DTONull() {
 		ResponseEntity<Object> response = customersService.save(null, request);
 		assertEquals(400, response.getStatusCodeValue());
 	}
 
-	//Unit Test Buat Ambil Semua data Customers
+	//ketika gagal akses api nya
 	@Test
+	@DisplayName("Create Customer - Gagal Karena Exception di Repository")
+	void testCreateCustomer_Exception() {
+		ValCustomersDTO dto = new ValCustomersDTO();
+		dto.setKodeCustomer("CUST900");
+
+		when(customersRepository.findByKodeCustomer("CUST900"))
+				.thenThrow(new RuntimeException("DB Error"));
+
+		ResponseEntity<Object> response = customersService.save(dto, request);
+		assertEquals(500, response.getStatusCodeValue());
+	}
+
+	// ==================== GET ALL ====================
+	//get semua data dengan where isactive nya true
+	@Test
+	@DisplayName("Get All Customer - Berhasil Mengambil Data Aktif")
 	void testFindAllCustomer_Berhasil() {
 		Customers c1 = new Customers();
 		c1.setIsactive(true);
@@ -91,5 +112,16 @@ class CustomersServiceTest {
 
 		ResponseEntity<Object> response = customersService.findAll(request);
 		assertEquals(200, response.getStatusCodeValue());
+	}
+
+	//ketika gagal akses api nya
+	@Test
+	@DisplayName("Get All Customer - Gagal Karena Exception di Repository")
+	void testFindAllCustomer_Exception() {
+		when(customersRepository.findCustomerByIsactiveTrue())
+				.thenThrow(new RuntimeException("DB Error"));
+
+		ResponseEntity<Object> response = customersService.findAll(request);
+		assertEquals(500, response.getStatusCodeValue());
 	}
 }
