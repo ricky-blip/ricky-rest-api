@@ -1,0 +1,18 @@
+--ini untuk build ke jar nya dulu
+mvn clean install -DskipTests=true
+
+----ini untuk buat image nya (file install)
+docker build --tag rickyrestapispringbootbeb26:1.0 .
+
+----in untuk buat container nya
+######docker container create --name restapiricky1 -p 8081:8080 rickyrestapispringbootbeb26:1.0
+docker container create --name restapiricky1 -p 8081:8080 -p 9092:9092 -e "SPRING_PROFILES_ACTIVE=docker" rickyrestapispringbootbeb26:1.0
+
+---ini buat start docker nya
+start restapiricky1
+
+---unutk membuat image supaya bisa push ke dockerhub
+docker tag rickyrestapispringbootbeb26:1.0 rickydockercontainer/rickyrestapispringbootbeb26:1.0
+
+--push ke dockerhub
+docker push rickydockercontainer/rickyrestapispringbootbeb26:1.1

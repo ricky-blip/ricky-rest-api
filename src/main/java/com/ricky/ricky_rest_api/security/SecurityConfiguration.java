@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
@@ -65,60 +66,97 @@ public class SecurityConfiguration {
 //		return http.build();
 //	}
 
-@Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-	http
-			// 1. Nonaktifkan CSRF karena API stateless JWT
-			.csrf(AbstractHttpConfigurer::disable)
-
-			// 2. Konfigurasi otorisasi permintaan
+//@Bean
+//public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//	http
+//			// 1. Nonaktifkan CSRF karena API stateless JWT
+//			.csrf(AbstractHttpConfigurer::disable)
+//
+//			// 2. Konfigurasi otorisasi permintaan
+////			.authorizeHttpRequests(requests -> requests
+////					// Izinkan akses tanpa autentikasi ke endpoint berikut
+////					.requestMatchers(
+////							"/api/auth/**",      // Endpoint autentikasi (login, register jika ada)
+////							"/supplier/**",      // Izinkan sementara, sesuaikan dengan kebutuhan
+////							"/contoh/**",        // Izinkan sementara, sesuaikan dengan kebutuhan
+////							"/swagger-ui/**",    // Swagger UI
+////							"/v3/api-docs/**"    // OpenAPI docs
+////					).permitAll()
+////					// Semua request lainnya memerlukan autentikasi
+////					.anyRequest().authenticated()
+////			)
+//
 //			.authorizeHttpRequests(requests -> requests
-//					// Izinkan akses tanpa autentikasi ke endpoint berikut
 //					.requestMatchers(
-//							"/api/auth/**",      // Endpoint autentikasi (login, register jika ada)
-//							"/supplier/**",      // Izinkan sementara, sesuaikan dengan kebutuhan
-//							"/contoh/**",        // Izinkan sementara, sesuaikan dengan kebutuhan
-//							"/swagger-ui/**",    // Swagger UI
-//							"/v3/api-docs/**"    // OpenAPI docs
+//							"/",
+//							"/api/auth/**",      // endpoint login
+//							"/supplier/**",
+//							"/contoh/**",
+//							"/swagger-ui/**",    // folder swagger
+//							"/swagger-ui.html",  // halaman utama swagger
+//							"/v3/api-docs/**",    // endpoint dokumentasi
+//							"/h2-console/**"
 //					).permitAll()
-//					// Semua request lainnya memerlukan autentikasi
 //					.anyRequest().authenticated()
 //			)
+//
+//
+//			// 3. Penanganan exception
+//			// Karena kita menggunakan JWT Filter, penanganan 401 biasanya dilakukan
+//			// oleh filter itu sendiri atau secara default oleh Spring Security.
+//			// Jika Anda ingin entry point kustom, buat bean-nya terlebih dahulu.
+//			// .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint)) // DIHAPUS
+//			.exceptionHandling(Customizer.withDefaults()) // Gunakan penanganan default
+//
+//			// 4. Manajemen sesi
+//			// Karena menggunakan JWT stateless, nonaktifkan pembuatan sesi HTTP
+//			.sessionManagement(session -> session
+//					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//			)
+//
+//			// 5. Tambahkan filter JWT Anda sebelum filter autentikasi bawaan Spring
+//			// Pastikan field jwtFilter di-inject dengan benar (@Autowired di atas)
+//			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+//
+//	// Jika menggunakan AuthenticationProvider kustom, uncomment baris berikut:
+//	// .authenticationProvider(authenticationProvider());
+//
+//	return http.build();
+//}
+
+	//----------------------------
+	@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	http
+			.csrf(AbstractHttpConfigurer::disable)
+
+			// Cara baru disable X-Frame-Options supaya H2 Console bisa dibuka
+			.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
 
 			.authorizeHttpRequests(requests -> requests
 					.requestMatchers(
 							"/",
-							"/api/auth/**",      // endpoint login
+							"/api/auth/**",
 							"/supplier/**",
 							"/contoh/**",
-							"/swagger-ui/**",    // folder swagger
-							"/swagger-ui.html",  // halaman utama swagger
-							"/v3/api-docs/**"    // endpoint dokumentasi
+							"/swagger-ui/**",
+							"/swagger-ui.html",
+							"/v3/api-docs/**",
+							"/h2-console/**"
 					).permitAll()
 					.anyRequest().authenticated()
 			)
 
+			.exceptionHandling(Customizer.withDefaults())
 
-			// 3. Penanganan exception
-			// Karena kita menggunakan JWT Filter, penanganan 401 biasanya dilakukan
-			// oleh filter itu sendiri atau secara default oleh Spring Security.
-			// Jika Anda ingin entry point kustom, buat bean-nya terlebih dahulu.
-			// .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint)) // DIHAPUS
-			.exceptionHandling(Customizer.withDefaults()) // Gunakan penanganan default
-
-			// 4. Manajemen sesi
-			// Karena menggunakan JWT stateless, nonaktifkan pembuatan sesi HTTP
 			.sessionManagement(session -> session
 					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 			)
 
-			// 5. Tambahkan filter JWT Anda sebelum filter autentikasi bawaan Spring
-			// Pastikan field jwtFilter di-inject dengan benar (@Autowired di atas)
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-	// Jika menggunakan AuthenticationProvider kustom, uncomment baris berikut:
-	// .authenticationProvider(authenticationProvider());
 
 	return http.build();
 }
+
+
 }

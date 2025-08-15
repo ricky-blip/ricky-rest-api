@@ -185,6 +185,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
+		<finalName>ricky-rest-api</finalName>
 	</build>
 
 </project>
